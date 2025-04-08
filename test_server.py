@@ -18,24 +18,15 @@ FORMAT = "utf-8"
 
 
 #headers
-SENSOR_CONFIG = "SSRC" #SSRC (client -> server) request sensor config, ranges and states (server -> client) SSRC|0,0,10;1,10,20;2,20,30\r sends ranges and states
-SENSOR_STATE= "SSRS" #SSRS|2\r (client -> server) sensor stores or sends the value to the actuator 
-ACTOR_CONFIG = "ACTC" #ACTC (client -> server) request actuator states, same as sensor states (server -> client) ACTC|0;1;2\r sends states
-ACTOR_STATE = "ACTS" #ACTR|0,1;1,0;2,0\r (server -> client) server tells which leds are turned on or off
+SENSOR_CONFIG = "SSRC" #SSRC (client -> server) request sensor config, ranges and states (server -> client) SSRC|0,10;10,20;20,30\r sends ranges
+SENSOR_STATE= "SSRS" #SSRS|2\r (client -> server) sensor stores or sends the value to the actuator (server -> actuator) ACTR|0,1;1,0;2,0\r
+ACTOR_STATE = "ACTS" # (server -> client) server tells which leds are turned on or off
 
 DELIMITER = "|"
 DISCONNECT = "DCNT"
 
-states = [0,1,2]
-min_range = (0,15)
-mid_range = (15,30)
-max_range = (30,45)
 
-range_settings = {
-    states[0]: min_range,
-    states[1]: mid_range,
-    states[2]: max_range
-}
+config = "15,30;30,45;45,60"
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -68,66 +59,49 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 
-def send_sensor_config():
-    pass
-
-def send_actuator_config():
-    pass
-
-def handle_requests(protocol):
-    if (protocol == SENSOR_CONFIG):
-        send_sensor_config()
-    elif (protocol == ACTOR_CONFIG):
-        send_actuator_config()
+def send_sensor_config(conn):
+    message = f"{config}\r"
+    conn.sendall(message.encode(FORMAT))
 
 
-
-def handle_sensor(conn):
-    clients.append(conn)
-    print("[SENSOR CONNECTED]")
-    try:
-        while True:
-            msg = conn.recv(1).decode(FORMAT)
-            if not msg:
-                break
-            print(f"[SENSOR]: {msg}")
-            if actuator_conn:
-                try:
-                    actuator_conn.sendall(f"{msg}\r".encode(FORMAT))
-                except:
-                    print("[!] Failed to push to actuator")
-    finally:
-        print("[SENSOR DISCONNECTED]")
-        clients.remove(conn)
-        conn.close()
-
-def handle_actuator(conn):
-    global actuator_conn
-    actuator_conn = conn
-    clients.append(conn)
-    print(f"[ACTUATOR CONNECTED]")
-    try:
-        while True:
-            pass
-    finally:
-        print("[ACTUATOR DISCONNECTED]")
-        clients.remove(conn)
-        conn.close()
+def send_sensor_state(state):
+    if actuator_conn:
+        state = state.split('|')[1]
+        print(f"STATE: {state}")
+        message = ""
+        if (state == '0'):
+            message = "0,1;1,0;2,0"
+        elif (state == '1'):
+            message = "0,0;1,1;2,0"
+        elif (state == '2'):
+            message = "0,0;1,0;2,1"
+        else:
+            message = "0,0;1,0;2,0"
+        actuator_conn.sendall(f"{message}\r".encode(FORMAT))
+    else:
+        print("THERE IS NO ACTUATOR")
 
 
 def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
-    hdr = conn.recv(HEADER).decode(FORMAT)
-    try:
-        if hdr == "SNSR":
-            handle_sensor(conn)
-        elif hdr == "ACTR":
-            handle_actuator(conn)
-        else:
-            conn.close()
-    except Exception as e:
-        print(f"[ERROR] {e}")
-        conn.close()
+    with conn:
+        while True:
+            try:
+                message = conn.recv(64).decode(FORMAT).strip()
+                if not message:
+                    break
+                if message.startswith(SENSOR_CONFIG):
+                    send_sensor_config(conn)
+                elif message.startswith(SENSOR_STATE):
+                    send_sensor_state(message)
+                elif message.startswith(ACTOR_STATE):
+                    global actuator_conn
+                    actuator_conn = conn
+                else:
+                    print("UNKNOWN REQUEST")
+            except Exception as e:
+                print(f"[ERROR] {e}")
+                conn.close()
 
 def start():
     server.listen()

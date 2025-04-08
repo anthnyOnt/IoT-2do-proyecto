@@ -1,3 +1,5 @@
+#include <string>
+#include "HardwareSerial.h"
 #include "../RemoteClient.h"
 #include "../WifiManager.h"
 #include "UltraSonicSensor.h"
@@ -7,6 +9,7 @@ class Sensor{
     WifiManager wifiManager;
     RemoteClient client;
     UltraSonicSensor sensor;
+    byte ranges[6];
     byte currentState;
 
   public:
@@ -19,17 +22,20 @@ class Sensor{
       Serial.begin(115200);
       wifiManager.connect();
       client.connectToServer();
-      client.sendMessage("SSRC");
+      requestConfig("SSRC");
       delay(1000);
     }
     
-    void requestConfig(){
-      client.sendMessage("SSRC");
-      //get ranges and states logic;
+    void getRanges(String config){
+      for(int i = 0; i < 6; i++)
+        ranges[i] = (config.substring(i * 3, 2 + (i * 3))).toInt();
     }
 
-    void sendState(){
-      client.sendMessage("SNRS" + String(state))
+    void requestConfig(String msg){
+      client.sendMessage(msg);
+      delay(500);
+      String config = client.readMessage();
+      getRanges(config);
     }
 
     float readDistance(){
@@ -41,9 +47,9 @@ class Sensor{
       byte state = 3;
       float distance = readDistance();
       
-      if(distance < 20) state = 0;
-      else if(distance >= 20 && distance < 40) state = 1;
-      else if(distance >= 40 && distance < 60) state = 2;
+      if(distance >= ranges[0] && distance < ranges[1]) state = 0;
+      else if(distance >= ranges[2] && distance < ranges[3]) state = 1;
+      else if(distance >= ranges[4] && distance < ranges[5]) state = 2;
 
       return state;
     }
@@ -51,7 +57,7 @@ class Sensor{
     void sendState(){
       byte state = classifyDistance();
       if(currentState != state){
-        client.sendMessage(String(state));
+        client.sendMessage("SSRS|" + String(state) + "\r");
         currentState = state;
       } 
     }
@@ -61,7 +67,7 @@ class Sensor{
         Serial.println("Reconnecting...");
         delay(5000);
         client.connectToServer();
-        client.sendMessage("SNSR");
+        requestConfig("SSRC");
       } else {
         if (client.readMessage() != "DCNT"){
           sendState();
