@@ -19,15 +19,25 @@ class Sensor{
       Serial.begin(115200);
       wifiManager.connect();
       client.connectToServer();
+      client.sendMessage("SSRC");
       delay(1000);
     }
     
+    void requestConfig(){
+      client.sendMessage("SSRC");
+      //get ranges and states logic;
+    }
+
+    void sendState(){
+      client.sendMessage("SNRS" + String(state))
+    }
+
     float readDistance(){
       sensor.update();
       return sensor.getDistanceCM();
     }
 
-    byte getState(){
+    byte classifyDistance(){
       byte state = 3;
       float distance = readDistance();
       
@@ -39,9 +49,9 @@ class Sensor{
     }
 
     void sendState(){
-      byte state = getState();
+      byte state = classifyDistance();
       if(currentState != state){
-        client.sendMessage("SNSR" + String(state));
+        client.sendMessage(String(state));
         currentState = state;
       } 
     }
@@ -51,9 +61,15 @@ class Sensor{
         Serial.println("Reconnecting...");
         delay(5000);
         client.connectToServer();
+        client.sendMessage("SNSR");
       } else {
-        sendState();
-        delay(500);
+        if (client.readMessage() != "DCNT"){
+          sendState();
+          delay(500);
+        } 
+        else{
+          client.disconnect();
+        }
       }
     }
 };

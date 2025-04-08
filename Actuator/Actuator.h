@@ -23,10 +23,16 @@ class Actuator{
       wifiManager.connect();
       client.connectToServer();
       delay(1000);
+      client.sendMessage("ACTR");
     }
 
     void getInstruction(){
       String instruction = client.readMessage();
+      if(instruction == "DCNT"){
+        currentLed = 3;
+        client.disconnect();
+        return;
+      }
       if(instruction != ""){
         currentLed = instruction.toInt();
       }
@@ -44,12 +50,10 @@ class Actuator{
         Serial.println("Reconnecting...");
         delay(5000);
         client.connectToServer();
-      } else {
         client.sendMessage("ACTR");
+      } else {
         readInstructions();
-        Serial.print("Current led ");
-        Serial.println(currentLed);
-        delay(1000);
+        delay(500);
       }
     }    
 };
