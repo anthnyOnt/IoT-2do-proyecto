@@ -2,7 +2,7 @@ import socket
 import threading
 import sys
 import signal
-import consts
+import config
 
 
 class Server:
@@ -38,7 +38,7 @@ class Server:
     def broadcast_disconnect(self):
         for client in self.clients:
             try:
-                client.sendall(f"{consts.DISCONNECT}\r".encode(consts.FORMAT))
+                client.sendall(f"{config.DISCONNECT}\r".encode(config.FORMAT))
                 client.close()
                 print("[DISCONNECT] Client disconnected")
             except:
@@ -59,14 +59,14 @@ class Server:
                     print(f"[ERROR] From {addr}: {e}")
                     break
     def receive_message(self, conn):
-        return conn.recv(64).decode(consts.FORMAT).strip()
+        return conn.recv(64).decode(config.FORMAT).strip()
 
     def route_message(self, conn, addr, msg):
-        if msg.startswith(consts.SENSOR_CONFIG):
+        if msg.startswith(config.SENSOR_CONFIG):
             self.send_config_to_sensor(conn)
-        elif msg.startswith(consts.SENSOR_STATE):
+        elif msg.startswith(config.SENSOR_STATE):
             self.forward_sensor_state(msg)
-        elif msg.startswith(consts.ACTOR_STATE):
+        elif msg.startswith(config.ACTOR_STATE):
             self.register_actuator(conn)
         else:
             self.handle_unknown_message(addr, msg)
@@ -82,7 +82,7 @@ class Server:
     def send_config_to_sensor(self, conn):
         try:
             message = f"{self.sensor_config}\r"
-            conn.sendall(message.encode(consts.FORMAT))
+            conn.sendall(message.encode(config.FORMAT))
             print("[CONFIG] Sent sensor config")
         except Exception as e:
             print(f"[ERROR] Sending config: {e}")
@@ -93,7 +93,7 @@ class Server:
         if self.actuator_conn:
             try:
                 
-                self.actuator_conn.sendall(f"{state}\r".encode(consts.FORMAT))
+                self.actuator_conn.sendall(f"{state}\r".encode(config.FORMAT))
                 print(f"[FORWARD] Sensor state '{state}' sent to actuator")
             except Exception as e:
                 print(f"[ERROR] Forwarding state: {e}")
