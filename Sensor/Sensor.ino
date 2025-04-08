@@ -1,9 +1,9 @@
 #include "Sensor.h"
 
 const uint16_t port = 5000;
-const char *host = "192.168.0.8";
-const char *SSID = "Ontiveros SRL";
-const char *password = "376098029";
+const char *host = "192.168.70.163";
+const char *SSID = "TECHLAB";
+const char *password = "catolica11";
 
 const byte triggerPin = 26;
 const byte echoPin = 25;

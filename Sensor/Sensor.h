@@ -1,5 +1,3 @@
-#include <string>
-#include "HardwareSerial.h"
 #include "../RemoteClient.h"
 #include "../WifiManager.h"
 #include "UltraSonicSensor.h"
