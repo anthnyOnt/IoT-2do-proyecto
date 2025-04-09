@@ -10,14 +10,14 @@ const byte redLed = 25;
 const byte yellowLed = 26;
 const byte greenLed = 27;
 
-Actuator a(greenLed, yellowLed, redLed, SSID, password, host, port);
+Actuator actuator(greenLed, yellowLed, redLed, SSID, password, host, port);
 
 void setup()
 {
-  a.init();
+  actuator.init();
 }
 
 void loop()
 {
-  a.update();
+  actuator.update();
 }
