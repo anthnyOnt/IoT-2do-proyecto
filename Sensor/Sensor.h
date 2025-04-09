@@ -20,7 +20,7 @@ class Sensor{
       Serial.begin(115200);
       wifiManager.connect();
       client.connectToServer();
-      requestConfig("SSRC");
+      requestConfig();
       delay(1000);
     }
     
@@ -29,8 +29,8 @@ class Sensor{
         ranges[i] = (config.substring(i * 3, 2 + (i * 3))).toInt();
     }
 
-    void requestConfig(String msg){
-      client.sendMessage(msg);
+    void requestConfig(){
+      client.sendMessage("SSRC");
       delay(500);
       String config = client.readMessage();
       getRanges(config);
@@ -65,7 +65,7 @@ class Sensor{
         Serial.println("Reconnecting...");
         delay(5000);
         client.connectToServer();
-        requestConfig("SSRC");
+        requestConfig();
       } else {
         if (client.readMessage() != "DCNT"){
           sendState();

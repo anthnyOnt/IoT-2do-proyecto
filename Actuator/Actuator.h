@@ -22,8 +22,8 @@ class Actuator{
       Serial.begin(115200);
       wifiManager.connect();
       client.connectToServer();
-      delay(1000);
       client.sendMessage("ACTS");
+      delay(1000);
     }
 
     void readInstructions(){
@@ -52,7 +52,7 @@ class Actuator{
         client.sendMessage("ACTS");
       } else {
         readInstructions();
-        delay(500);
+        delay(1000);
       }
     }    
 };

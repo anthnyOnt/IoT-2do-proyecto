@@ -2,6 +2,7 @@ import socket
 import threading
 import sys
 import signal
+import time
 
 #ADDRESS
 PORT = 5000
@@ -17,6 +18,7 @@ SENSOR_STATE= "SSRS" #SSRS|2\r (client -> server) sensor stores or sends the val
 ACTOR_STATE = "ACTS" # (server -> client) server tells which leds are turned on or off
 DELIMITER = "|"
 DISCONNECT = "DCNT"
+CHECK_CONNECTION = "CHCK"
 
 CONFIG = "00,20;20,40;40,60"
 
@@ -26,13 +28,12 @@ class Server:
         self.sensor_config = sensor_config
         self.clients = []
         self.actuator_conn = None
-
+        self.sensor_conn = None
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind(self.addr)
         self.format = FORMAT
 
-        # Setup shutdown hook
         signal.signal(signal.SIGINT, self.shutdown_handler)
 
     def start(self):
@@ -74,6 +75,7 @@ class Server:
                 except Exception as e:
                     print(f"[ERROR] From {addr}: {e}")
                     break
+                
     def receive_message(self, conn):
         return conn.recv(64).decode(FORMAT).strip()
 
