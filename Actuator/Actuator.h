@@ -52,7 +52,7 @@ class Actuator{
         client.sendMessage("ACTS");
       } else {
         readInstructions();
-        delay(1000);
+        delay(500);
       }
     }    
 };
