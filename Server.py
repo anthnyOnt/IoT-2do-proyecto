@@ -2,8 +2,23 @@ import socket
 import threading
 import sys
 import signal
-import config
 
+#ADDRESS
+PORT = 5000
+SERVER = "192.168.0.8"
+ADDR = (SERVER, PORT)
+
+#MISC
+FORMAT = "utf-8"
+
+#MESSAGES
+SENSOR_CONFIG = "SSRC" #SSRC (client -> server) request sensor config, ranges and states (server -> client) SSRC|0,10;10,20;20,30\r sends ranges
+SENSOR_STATE= "SSRS" #SSRS|2\r (client -> server) sensor stores or sends the value to the actuator (server -> actuator) ACTR|0,1;1,0;2,0\r
+ACTOR_STATE = "ACTS" # (server -> client) server tells which leds are turned on or off
+DELIMITER = "|"
+DISCONNECT = "DCNT"
+
+CONFIG = "00,20;20,40;40,60"
 
 class Server:
     def __init__(self, host, port, sensor_config):
@@ -15,6 +30,7 @@ class Server:
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind(self.addr)
+        self.format = FORMAT
 
         # Setup shutdown hook
         signal.signal(signal.SIGINT, self.shutdown_handler)
@@ -38,7 +54,7 @@ class Server:
     def broadcast_disconnect(self):
         for client in self.clients:
             try:
-                client.sendall(f"{config.DISCONNECT}\r".encode(config.FORMAT))
+                client.sendall(f"{DISCONNECT}\r".encode(self.format))
                 client.close()
                 print("[DISCONNECT] Client disconnected")
             except:
@@ -59,14 +75,14 @@ class Server:
                     print(f"[ERROR] From {addr}: {e}")
                     break
     def receive_message(self, conn):
-        return conn.recv(64).decode(config.FORMAT).strip()
+        return conn.recv(64).decode(FORMAT).strip()
 
     def route_message(self, conn, addr, msg):
-        if msg.startswith(config.SENSOR_CONFIG):
+        if msg.startswith(SENSOR_CONFIG):
             self.send_config_to_sensor(conn)
-        elif msg.startswith(config.SENSOR_STATE):
+        elif msg.startswith(SENSOR_STATE):
             self.forward_sensor_state(msg)
-        elif msg.startswith(config.ACTOR_STATE):
+        elif msg.startswith(ACTOR_STATE):
             self.register_actuator(conn)
         else:
             self.handle_unknown_message(addr, msg)
@@ -82,7 +98,7 @@ class Server:
     def send_config_to_sensor(self, conn):
         try:
             message = f"{self.sensor_config}\r"
-            conn.sendall(message.encode(config.FORMAT))
+            conn.sendall(message.encode(self.format))
             print("[CONFIG] Sent sensor config")
         except Exception as e:
             print(f"[ERROR] Sending config: {e}")
@@ -93,18 +109,14 @@ class Server:
         if self.actuator_conn:
             try:
                 
-                self.actuator_conn.sendall(f"{state}\r".encode(config.FORMAT))
+                self.actuator_conn.sendall(f"{state}\r".encode(self.format))
                 print(f"[FORWARD] Sensor state '{state}' sent to actuator")
             except Exception as e:
                 print(f"[ERROR] Forwarding state: {e}")
         else:
             print("[WARN] No actuator connected")
 
-
 if __name__ == "__main__":
-    config = "00,10;10,20;20,30"
-    host = "192.168.70.163"
-    port = 5000
-    server_instance = Server(host, port , config)
+    server_instance = Server(SERVER, PORT ,CONFIG)
     print("[STARTING] Server is starting...")
     server_instance.start()

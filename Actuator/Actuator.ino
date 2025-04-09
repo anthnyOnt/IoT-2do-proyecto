@@ -1,9 +1,10 @@
 #include "Actuator.h"
+#include "../config.h"
 
-const uint16_t port = 5000;
-const char *host = "192.168.70.163";
-const char *SSID = "TECHLAB";
-const char *password = "catolica11";
+// const uint16_t port = 1234;
+// const char *host = "x.x.x.x";
+// const char *SSID = "network";
+// const char *password = "password";
 
 const byte redLed = 25;
 const byte yellowLed = 26;
