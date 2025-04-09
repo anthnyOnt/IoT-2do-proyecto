@@ -1,2 +1,5 @@
-consts.py
+#settings and credentials
 config.h
+
+#pycache
+/__pycache__/
