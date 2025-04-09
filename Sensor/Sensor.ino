@@ -9,14 +9,14 @@
 const byte triggerPin = 26;
 const byte echoPin = 25;
 
-Sensor s(triggerPin, echoPin, SSID, password, host, port);
+Sensor sensor(triggerPin, echoPin, SSID, password, host, port);
 
 void setup()
 {
-  s.init();
+  sensor.init();
 }
 
 void loop()
 {
-  s.update();
+  sensor.update();
 }

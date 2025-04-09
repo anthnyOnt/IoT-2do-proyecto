@@ -6,19 +6,18 @@ import time
 
 #ADDRESS
 PORT = 5000
-SERVER = "192.168.0.8"
+SERVER = "172.20.10.2"
 ADDR = (SERVER, PORT)
 
 #MISC
 FORMAT = "utf-8"
 
 #MESSAGES
-SENSOR_CONFIG = "SSRC" #SSRC (client -> server) request sensor config, ranges and states (server -> client) SSRC|0,10;10,20;20,30\r sends ranges
-SENSOR_STATE= "SSRS" #SSRS|2\r (client -> server) sensor stores or sends the value to the actuator (server -> actuator) ACTR|0,1;1,0;2,0\r
-ACTOR_STATE = "ACTS" # (server -> client) server tells which leds are turned on or off
+SENSOR_CONFIG = "SSRC" #SSRC (client -> server) request sensor config, ranges and states (server -> client) 0,10;10,20;20,30\r sends ranges
+SENSOR_STATE= "SSRS" #SSRS|2\r (client -> server) sensor stores or sends the value to the actuator (server -> actuator) 2\r
+ACTOR_STATE = "ACTS" # (client -> server) tells the server to store the actuator connection to forward states
 DELIMITER = "|"
 DISCONNECT = "DCNT"
-CHECK_CONNECTION = "CHCK"
 
 CONFIG = "00,20;20,40;40,60"
 
